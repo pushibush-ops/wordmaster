@@ -140,8 +140,8 @@ async function renderHome(container) {
     </div>
   `;
 
-  // 绑定宠物栏点击事件
-  document.querySelector('.pet-bar').onclick = async function() {
+  // 绑定宠物图标点击事件 - 点击宠物触发动作
+  document.querySelector('.pet-emoji').onclick = async function() {
     // 面板展开后再触发动作
     setTimeout(async () => {
       const panel = document.querySelector('.pet-panel');
