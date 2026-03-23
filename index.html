@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1a1a2e">
+  <title>单词小助手</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <div id="app">
+    <!-- 页面内容由 JS 渲染 -->
+  </div>
+  <script src="js/db.js"></script>
+  <script src="js/words.js"></script>
+  <script src="js/algorithm.js"></script>
+  <script src="js/app.js"></script>
+
+  <script>
+    // 初始化应用
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        await initDatabase();
+        render();
+      } catch (e) {
+        console.error('Init failed:', e);
+        document.getElementById('app').innerHTML = '<div class="container"><p>加载失败，请刷新页面</p></div>';
+      }
+    });
+  </script>
+</body>
+</html>
