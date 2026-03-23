@@ -225,7 +225,7 @@ async function getPetDialogue(forceState = null) {
 
   // 强制状态
   if (forceState) {
-    return getStateDialogue(forceState);
+    return getStateDialogue(forceState) || getTimeGreeting();
   }
 
   // 饥饿状态优先
@@ -235,7 +235,7 @@ async function getPetDialogue(forceState = null) {
 
   // 喂食后对话（短时间内）
   if (pet.lastFeedDate === new Date().toISOString().split('T')[0]) {
-    return getStateDialogue('afterFeed');
+    return getStateDialogue('afterFeed') || getTimeGreeting();
   }
 
   // 默认时间问候
