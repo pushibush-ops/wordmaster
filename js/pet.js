@@ -287,3 +287,36 @@ async function dailyCheckIn() {
     coins: pet.coins
   };
 }
+
+// 触发宠物动作（不增加好感度，由调用者决定）
+async function triggerPetAction(actionId = null) {
+  const pet = await getPet();
+  if (!pet || !pet.type) {
+    alert('请先领养宠物！');
+    return null;
+  }
+
+  const unlocked = pet.unlockedActions || ['stretch', 'tail', 'sleep'];
+
+  // 如果没有指定动作，随机选择一个已解锁的
+  if (!actionId) {
+    const available = ACTIONS.filter(a => unlocked.includes(a.id) ||
+      (pet.favorability >= a.favorability && a.favorability > 0));
+    actionId = available[Math.floor(Math.random() * available.length)].id;
+  }
+
+  // 检查动作是否可用
+  const action = ACTIONS.find(a => a.id === actionId);
+  if (!action) return null;
+
+  const isUnlocked = unlocked.includes(actionId) || pet.favorability >= action.favorability;
+  if (!isUnlocked) {
+    alert(`需要 ${action.favorability} 好感度才能解锁此动作`);
+    return null;
+  }
+
+  pet.lastInteractDate = new Date().toISOString().split('T')[0];
+  await db.put(STORE_PET, pet);
+
+  return action;
+}
