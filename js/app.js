@@ -587,6 +587,8 @@ function togglePetPanel() {
 // 渲染宠物面板
 async function renderPetPanel() {
   const pet = await getPet();
+  if (!pet || !pet.type) return;
+
   const petType = PET_TYPES.find(p => p.type === pet.type);
 
   const panel = document.getElementById('petPanel');
@@ -747,7 +749,8 @@ async function submitRename() {
 // 签到处理函数
 async function handleCheckIn() {
   const result = await dailyCheckIn();
-  alert(result.message);
+  // 使用对话气泡显示结果
+  showPetDialogue(result.message);
   renderPetPanel();
 }
 
@@ -771,10 +774,16 @@ function showPetDialogue(text) {
     bubble.id = 'pet-dialogue-bubble';
     document.body.appendChild(bubble);
   }
-  bubble.textContent = text;
+
+  // 清除之前的 timeout
+  if (bubble._timeout) {
+    clearTimeout(bubble._timeout);
+  }
+
+  bubble.textContent = text || '';
   bubble.classList.add('show');
 
-  setTimeout(() => bubble.classList.remove('show'), 3000);
+  bubble._timeout = setTimeout(() => bubble.classList.remove('show'), 3000);
 }
 
 // 动作动画函数
@@ -785,8 +794,14 @@ function showActionAnimation(emoji) {
     anim.id = 'pet-action-animation';
     document.body.appendChild(anim);
   }
-  anim.textContent = emoji;
+
+  // 清除之前的 timeout
+  if (anim._timeout) {
+    clearTimeout(anim._timeout);
+  }
+
+  anim.textContent = emoji || '✨';
   anim.classList.add('animate');
 
-  setTimeout(() => anim.classList.remove('animate'), 1500);
+  anim._timeout = setTimeout(() => anim.classList.remove('animate'), 1500);
 }
