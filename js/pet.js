@@ -189,3 +189,55 @@ async function getAvailableActions() {
   const unlocked = pet.unlockedActions || ['stretch', 'tail', 'sleep'];
   return ACTIONS.filter(a => unlocked.includes(a.id));
 }
+
+// 获取时间段
+function getTimePeriod() {
+  const hour = new Date().getHours();
+  if (hour >= 6 && hour < 12) return 'morning';
+  if (hour >= 12 && hour < 18) return 'afternoon';
+  if (hour >= 18 && hour < 24) return 'evening';
+  return 'night';
+}
+
+// 获取时间问候语
+function getTimeGreeting() {
+  const period = getTimePeriod();
+  const greetings = TIME_GREETINGS[period];
+  return greetings[Math.floor(Math.random() * greetings.length)];
+}
+
+// 获取状态对话
+function getStateDialogue(state) {
+  const dialogues = STATE_DIALOGUES[state];
+  if (!dialogues) return null;
+  return dialogues[Math.floor(Math.random() * dialogues.length)];
+}
+
+// 获取随机对话
+function getRandomDialogue() {
+  return RANDOM_DIALOGUES[Math.floor(Math.random() * RANDOM_DIALOGUES.length)];
+}
+
+// 获取综合对话（优先状态对话）
+async function getPetDialogue(forceState = null) {
+  const pet = await getPet();
+  if (!pet) return getTimeGreeting();
+
+  // 强制状态
+  if (forceState) {
+    return getStateDialogue(forceState);
+  }
+
+  // 饥饿状态优先
+  if (pet.hunger < 30) {
+    return pet.hunger === 0 ? getStateDialogue('starving') : getStateDialogue('hungry');
+  }
+
+  // 喂食后对话（短时间内）
+  if (pet.lastFeedDate === new Date().toISOString().split('T')[0]) {
+    return getStateDialogue('afterFeed');
+  }
+
+  // 默认时间问候
+  return getTimeGreeting();
+}
