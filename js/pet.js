@@ -148,3 +148,45 @@ async function renamePet(newName) {
   pet.name = newName;
   await db.put(STORE_PET, pet);
 }
+
+// 增加好感度（返回是否解锁新动作）
+async function addFavorability(amount) {
+  const pet = await getPet();
+  if (!pet || !pet.type) return { unlocked: false, newActions: [] };
+
+  pet.favorability = (pet.favorability || 0) + amount;
+
+  // 检查是否解锁新动作
+  const newActions = checkActionUnlock(pet);
+
+  await db.put(STORE_PET, pet);
+  return { favorability: pet.favorability, unlocked: newActions.length > 0, newActions };
+}
+
+// 检查并解锁新动作（返回新增的动作列表）
+function checkActionUnlock(pet) {
+  if (!pet.unlockedActions) {
+    pet.unlockedActions = ['stretch', 'tail', 'sleep'];
+  }
+
+  const newlyUnlocked = [];
+  for (const action of ACTIONS) {
+    if (action.favorability > 0 &&
+        pet.favorability >= action.favorability &&
+        !pet.unlockedActions.includes(action.id)) {
+      pet.unlockedActions.push(action.id);
+      newlyUnlocked.push(action);
+    }
+  }
+  return newlyUnlocked;
+}
+
+// 获取当前可用的动作列表
+async function getAvailableActions() {
+  const pet = await getPet();
+  if (!pet) return [];
+
+  const unlocked = pet.unlockedActions || ['stretch', 'tail', 'sleep'];
+  return ACTIONS.filter(a => unlocked.includes(a.id) ||
+    (pet.favorability >= a.favorability && a.favorability > 0));
+}
