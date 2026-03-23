@@ -684,7 +684,6 @@ async function renderPetPanel() {
       </div>
 
       <div class="pet-actions">
-        <button class="btn" onclick="showPetSelect()">🎨 更换宠物</button>
         <button class="btn" onclick="showRenameInput()">✏️ 修改名字</button>
       </div>
     </div>

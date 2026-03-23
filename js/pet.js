@@ -33,11 +33,9 @@ const FOODS = [
   { id: 'chicken', name: '烤鸡', emoji: '🍗', price: 20, restore: 100 }
 ];
 
-// 宠物类型
+// 宠物类型（只有猫咪）
 const PET_TYPES = [
-  { type: 'cat', emoji: '🐱', name: '小猫' },
-  { type: 'dog', emoji: '🐶', name: '小狗' },
-  { type: 'lizard', emoji: '🦎', name: '小蜥' }
+  { type: 'cat', emoji: '🐱', name: '小猫' }
 ];
 
 // 获取宠物状态emoji
