@@ -19,6 +19,20 @@ if ('serviceWorker' in navigator) {
     .catch(err => console.log('SW registration failed:', err));
 }
 
+// 初始化音频上下文（解决移动端自动播放限制）
+let audioInitialized = false;
+function initAudio() {
+  if (audioInitialized) return;
+  const utterance = new SpeechSynthesisUtterance(' ');
+  utterance.volume = 0;
+  speechSynthesis.speak(utterance);
+  audioInitialized = true;
+}
+
+// 页面点击时初始化音频
+document.addEventListener('click', initAudio, { once: true });
+document.addEventListener('touchstart', initAudio, { once: true });
+
 // 路由函数
 function navigate(page) {
   currentPage = page;
@@ -128,6 +142,11 @@ async function startStudy() {
     return;
   }
 
+  // 播放一个静音音频以启用自动播放（移动端兼容）
+  const dummy = new SpeechSynthesisUtterance(' ');
+  dummy.volume = 0;
+  speechSynthesis.speak(dummy);
+
   navigate(PAGES.STUDY);
   render();
 }
@@ -167,6 +186,14 @@ function renderStudy(container) {
 
       <div class="answer-section hidden" id="answerSection">
         <div class="word-definition">${word.definition}</div>
+        <div class="examples-section">
+          ${word.examples ? word.examples.map((ex, i) => `
+            <div class="example-item">
+              <div class="example-en">${ex.en}</div>
+              <div class="example-cn">${ex.cn}</div>
+            </div>
+          `).join('') : ''}
+        </div>
       </div>
 
       <div class="action-buttons">
@@ -195,6 +222,12 @@ function showAnswer() {
   document.getElementById('answerSection').classList.remove('hidden');
   document.getElementById('showAnswerBtn').classList.add('hidden');
   document.getElementById('resultButtons').classList.remove('hidden');
+
+  // 自动朗读例句
+  const word = studyQueue[currentIndex];
+  if (word.examples && word.examples.length > 0) {
+    setTimeout(() => speakWord(word.examples[0].en), 800);
+  }
 }
 
 // 回答单词
