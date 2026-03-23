@@ -241,3 +241,49 @@ async function getPetDialogue(forceState = null) {
   // 默认时间问候
   return getTimeGreeting();
 }
+
+// 每日签到
+async function dailyCheckIn() {
+  const pet = await getPet();
+  if (!pet || !pet.type) return { success: false, message: '请先领养宠物' };
+
+  const today = new Date().toISOString().split('T')[0];
+
+  // 今天已签到
+  if (pet.lastCheckInDate === today) {
+    return {
+      success: false,
+      message: `今天已经签到过了！连续 ${pet.checkInDays || 0} 天`,
+      checkInDays: pet.checkInDays || 0
+    };
+  }
+
+  // 检查是否连续签到
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+  let checkInDays = 1;
+  if (pet.lastCheckInDate === yesterdayStr) {
+    checkInDays = (pet.checkInDays || 0) + 1;
+  }
+
+  // 更新数据
+  pet.lastCheckInDate = today;
+  pet.checkInDays = checkInDays;
+  pet.favorability = (pet.favorability || 0) + 5;
+  pet.coins += 1;
+
+  // 检查动作解锁
+  checkActionUnlock(pet);
+
+  await db.put(STORE_PET, pet);
+
+  return {
+    success: true,
+    message: `签到成功！+5 好感度，+1 金币，连续 ${checkInDays} 天`,
+    checkInDays: checkInDays,
+    favorability: pet.favorability,
+    coins: pet.coins
+  };
+}
