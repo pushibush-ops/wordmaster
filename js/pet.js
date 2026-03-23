@@ -1,3 +1,31 @@
+// 动作定义
+const ACTIONS = [
+  { id: 'stretch', name: '伸懒腰', emoji: '🐱', favorability: 0 },
+  { id: 'tail', name: '摇尾巴', emoji: '🐕', favorability: 0 },
+  { id: 'sleep', name: '睡觉', emoji: '😴', favorability: 0 },
+  { id: 'jump', name: '跳跃', emoji: '🐱🔼', favorability: 50 },
+  { id: 'roll', name: '翻滚', emoji: '🔄', favorability: 100 },
+  { id: 'cozy', name: '献殷勤', emoji: '💕', favorability: 150 },
+  { id: 'prank', name: '扮鬼脸', emoji: '😜', favorability: 200 }
+];
+
+// 对话定义
+const TIME_GREETINGS = {
+  morning: ['主人早上好！☀️', '早安呀~ 🌅'],
+  afternoon: ['主人午安~ 🌤️', '下午好！☀️'],
+  evening: ['晚上好呀！🌙', '晚安~ 🌃'],
+  night: ['晚安... 🌙', '睡觉啦~ 💤']
+};
+
+const STATE_DIALOGUES = {
+  hungry: ['我好饿QAQ', '要吃饭饭... 😢'],
+  starving: ['要死了要死了... 🤒', '救命呀... 💀'],
+  afterFeed: ['谢谢主人！❤️', '好吃！😋', '爱你哟~ 💕'],
+  newUnlock: ['我又学会新动作啦！🎉', '有新技能！✨']
+};
+
+const RANDOM_DIALOGUES = ['喵~', '汪~', '蹭蹭~', '要抱抱~', '陪我玩嘛~', '么么哒~', '哎呀~'];
+
 // 食物定义
 const FOODS = [
   { id: 'fish', name: '鱼干', emoji: '🐟', price: 5, restore: 20 },
@@ -40,7 +68,13 @@ async function createPet(type, name = '小毛球') {
     lastHungerDate: new Date().toISOString().split('T')[0],
     lastFeedDate: null,
     adopted: true,
-    createdAt: pet ? pet.createdAt : new Date().toISOString()
+    createdAt: pet ? pet.createdAt : new Date().toISOString(),
+    // 新增字段
+    favorability: 0,           // 好感度
+    lastInteractDate: null,     // 上次互动日期
+    unlockedActions: ['stretch', 'tail', 'sleep'],  // 已解锁动作
+    lastCheckInDate: null,      // 上次签到日期
+    checkInDays: 0              // 连续签到天数
   });
 }
 

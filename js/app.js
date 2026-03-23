@@ -77,6 +77,16 @@ async function renderHome(container) {
   await checkDailyHunger();
   const pet = await getPet();
 
+  // 迁移旧数据（添加新字段）
+  if (pet && pet.type && pet.favorability === undefined) {
+    pet.favorability = 0;
+    pet.lastInteractDate = null;
+    pet.unlockedActions = ['stretch', 'tail', 'sleep'];
+    pet.lastCheckInDate = null;
+    pet.checkInDays = 0;
+    await db.put(STORE_PET, pet);
+  }
+
   // 检查是否已领养宠物
   if (pet && !pet.adopted) {
     renderPetSelect(container);
