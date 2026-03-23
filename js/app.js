@@ -217,7 +217,7 @@ function renderStudy(container) {
       <div class="answer-section hidden" id="answerSection">
         <div class="word-definition">${word.definition}</div>
         <div class="examples-section">
-          ${word.examples ? word.examples.slice(0, 2).map((ex) => `
+          ${word.examples ? word.examples.slice(0, 1).map((ex) => `
             <div class="example-item">
               <div class="example-en">${ex.en}</div>
               <div class="example-cn">${ex.cn}</div>
