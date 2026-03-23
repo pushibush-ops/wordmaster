@@ -187,6 +187,5 @@ async function getAvailableActions() {
   if (!pet) return [];
 
   const unlocked = pet.unlockedActions || ['stretch', 'tail', 'sleep'];
-  return ACTIONS.filter(a => unlocked.includes(a.id) ||
-    (pet.favorability >= a.favorability && a.favorability > 0));
+  return ACTIONS.filter(a => unlocked.includes(a.id));
 }
