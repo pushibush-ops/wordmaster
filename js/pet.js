@@ -300,8 +300,12 @@ async function triggerPetAction(actionId = null) {
 
   // 如果没有指定动作，随机选择一个已解锁的
   if (!actionId) {
-    const available = ACTIONS.filter(a => unlocked.includes(a.id) ||
-      (pet.favorability >= a.favorability && a.favorability > 0));
+    // 只选择已解锁的动作
+    const available = ACTIONS.filter(a => unlocked.includes(a.id));
+    if (available.length === 0) {
+      alert('暂无可用动作');
+      return null;
+    }
     actionId = available[Math.floor(Math.random() * available.length)].id;
   }
 
