@@ -141,18 +141,24 @@ async function renderHome(container) {
   `;
 
   // 绑定宠物栏点击事件
-  document.querySelector('.pet-bar').onclick = async function(e) {
-    if (e.target.closest('.pet-panel')) return;
+  document.querySelector('.pet-bar').onclick = async function() {
+    // 面板展开后再触发动作
+    setTimeout(async () => {
+      const panel = document.querySelector('.pet-panel');
+      if (panel && !panel.classList.contains('hidden')) {
+        const action = await triggerPetAction();
+        if (action) {
+          const result = await addFavorability(2);
+          showPetDialogue(await getPetDialogue());
+          showActionAnimation(action.emoji);
 
-    togglePetPanel();
-
-    // 点击宠物触发动作 +2 好感度
-    const action = await triggerPetAction();
-    if (action) {
-      await addFavorability(2);
-      showPetDialogue(await getPetDialogue());
-      showActionAnimation(action.emoji);
-    }
+          // 如果解锁了新动作，显示提示
+          if (result.unlocked && result.newActions.length > 0) {
+            showPetDialogue('我又学会新动作啦！🎉 ' + result.newActions.map(a => a.emoji).join(' '));
+          }
+        }
+      }
+    }, 100);
   };
 }
 
@@ -305,7 +311,10 @@ async function answerWord(isCorrect) {
   // 回答正确获得金币
   if (isCorrect) {
     await addCoins();
-    await addFavorability(1);  // 回答正确 +1 好感度
+    const result = await addFavorability(1);
+    if (result.unlocked && result.newActions.length > 0) {
+      showPetDialogue('我又学会新动作啦！🎉 ' + result.newActions.map(a => a.emoji).join(' '));
+    }
   }
 
   currentIndex++;
@@ -684,8 +693,12 @@ async function renderPetPanel() {
 
 // 购买食物
 async function buyFood(foodId) {
-  const success = await feedPet(foodId);
-  if (success) {
+  const result = await feedPet(foodId);
+  if (result && result.success) {
+    // 如果解锁了新动作，显示提示
+    if (result.unlocked && result.newActions.length > 0) {
+      showPetDialogue('我又学会新动作啦！🎉 ' + result.newActions.map(a => a.emoji).join(' '));
+    }
     renderPetPanel();
   }
 }
@@ -774,9 +787,13 @@ async function handleCheckIn() {
 async function handleActionClick(actionId) {
   const action = await triggerPetAction(actionId);
   if (action) {
-    await addFavorability(1);  // 点击动作按钮 +1 好感度
+    const result = await addFavorability(1);  // 点击动作按钮 +1 好感度
     showPetDialogue(await getPetDialogue());
     showActionAnimation(action.emoji);
+    // 如果解锁了新动作，显示提示
+    if (result.unlocked && result.newActions.length > 0) {
+      showPetDialogue('我又学会新动作啦！🎉 ' + result.newActions.map(a => a.emoji).join(' '));
+    }
     renderPetPanel();
   }
 }

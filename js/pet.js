@@ -128,9 +128,9 @@ async function feedPet(foodId) {
   await db.put(STORE_PET, pet);
 
   // 添加好感度
-  await addFavorability(3);  // 喂食 +3 好感度
+  const result = await addFavorability(3);  // 喂食 +3 好感度
 
-  return true;
+  return { success: true, unlocked: result.unlocked, newActions: result.newActions };
 }
 
 // 获得金币
