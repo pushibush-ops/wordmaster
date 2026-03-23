@@ -567,6 +567,143 @@ body {
   font-size: 12px;
 }
 
+/* ===== 动作按钮区 ===== */
+.action-buttons-section {
+  margin-bottom: 20px;
+}
+
+.action-buttons-section h4 {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.action-btn:active {
+  background: rgba(255,255,255,0.1);
+  transform: scale(0.98);
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-btn.locked {
+  opacity: 0.6;
+}
+
+/* ===== 签到区域 ===== */
+.checkin-section {
+  margin-bottom: 20px;
+}
+
+.checkin-btn {
+  width: 100%;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.checkin-btn:active {
+  transform: scale(0.98);
+}
+
+.checkin-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+}
+
+/* ===== 好感度显示 ===== */
+.pet-favorability {
+  color: #ff6b6b;
+  font-weight: 600;
+}
+
+/* ===== 宠物对话气泡 ===== */
+#pet-dialogue-bubble {
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(255,255,255,0.95);
+  color: #333;
+  padding: 12px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  max-width: 80%;
+  text-align: center;
+}
+
+#pet-dialogue-bubble.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ===== 宠物动作动画 ===== */
+#pet-action-animation {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 80px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+#pet-action-animation.animate {
+  animation: petActionAnim 1.5s ease-out forwards;
+}
+
+@keyframes petActionAnim {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+
 /* ===== 宠物操作按钮 ===== */
 .pet-actions {
   display: flex;

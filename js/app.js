@@ -612,6 +612,10 @@ async function renderPetPanel() {
           <span class="pet-stat-label">🪙 金币</span>
           <span class="pet-coins">${pet.coins}</span>
         </div>
+        <div class="pet-stat">
+          <span class="pet-stat-label">❤️ 好感度</span>
+          <span class="pet-favorability">${pet?.favorability || 0}</span>
+        </div>
       </div>
 
       <div class="food-shop">
@@ -623,6 +627,33 @@ async function renderPetPanel() {
             <span class="food-restore">+${food.restore}</span>
           </button>
         `).join('')}
+      </div>
+
+      <div class="action-buttons-section">
+        <h4>🎭 动作互动</h4>
+        <div class="action-buttons">
+          ${(function() {
+            const unlockedActions = pet?.unlockedActions || ['stretch', 'tail', 'sleep'];
+            return ACTIONS.map(action => {
+              const isUnlocked = unlockedActions.includes(action.id) ||
+                (pet?.favorability >= action.favorability && action.favorability > 0);
+              const locked = !isUnlocked;
+
+              return `<button class="action-btn ${locked ? 'locked' : ''}"
+                onclick="handleActionClick('${action.id}')"
+                ${locked ? 'disabled' : ''}>
+                ${action.emoji} ${action.name}
+                ${locked ? `🔒${action.favorability}` : ''}
+              </button>`;
+            }).join('');
+          })()}
+        </div>
+      </div>
+
+      <div class="checkin-section">
+        <button class="checkin-btn" onclick="handleCheckIn()" ${(pet?.lastCheckInDate === new Date().toISOString().split('T')[0]) ? 'disabled' : ''}>
+          ${(pet?.lastCheckInDate === new Date().toISOString().split('T')[0]) ? '✅ 已签到' : '📅 签到'} ${pet?.checkInDays ? `(连续${pet.checkInDays}天)` : ''}
+        </button>
       </div>
 
       <div class="pet-actions">
@@ -711,4 +742,51 @@ async function submitRename() {
   }
   await renamePet(newName);
   render();
+}
+
+// 签到处理函数
+async function handleCheckIn() {
+  const result = await dailyCheckIn();
+  alert(result.message);
+  renderPetPanel();
+}
+
+// 动作点击处理函数
+async function handleActionClick(actionId) {
+  const action = await triggerPetAction(actionId);
+  if (action) {
+    await addFavorability(1);  // 点击动作按钮 +1 好感度
+    showPetDialogue(await getPetDialogue());
+    showActionAnimation(action.emoji);
+    renderPetPanel();
+  }
+}
+
+// 对话气泡显示函数
+function showPetDialogue(text) {
+  // 创建临时对话气泡
+  let bubble = document.getElementById('pet-dialogue-bubble');
+  if (!bubble) {
+    bubble = document.createElement('div');
+    bubble.id = 'pet-dialogue-bubble';
+    document.body.appendChild(bubble);
+  }
+  bubble.textContent = text;
+  bubble.classList.add('show');
+
+  setTimeout(() => bubble.classList.remove('show'), 3000);
+}
+
+// 动作动画函数
+function showActionAnimation(emoji) {
+  let anim = document.getElementById('pet-action-animation');
+  if (!anim) {
+    anim = document.createElement('div');
+    anim.id = 'pet-action-animation';
+    document.body.appendChild(anim);
+  }
+  anim.textContent = emoji;
+  anim.classList.add('animate');
+
+  setTimeout(() => anim.classList.remove('animate'), 1500);
 }
