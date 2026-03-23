@@ -139,6 +139,21 @@ async function renderHome(container) {
       </div>
     </div>
   `;
+
+  // 绑定宠物栏点击事件
+  document.querySelector('.pet-bar').onclick = async function(e) {
+    if (e.target.closest('.pet-panel')) return;
+
+    togglePetPanel();
+
+    // 点击宠物触发动作 +2 好感度
+    const action = await triggerPetAction();
+    if (action) {
+      await addFavorability(2);
+      showPetDialogue(await getPetDialogue());
+      showActionAnimation(action.emoji);
+    }
+  };
 }
 
 // 获取学习统计
@@ -290,6 +305,7 @@ async function answerWord(isCorrect) {
   // 回答正确获得金币
   if (isCorrect) {
     await addCoins();
+    await addFavorability(1);  // 回答正确 +1 好感度
   }
 
   currentIndex++;

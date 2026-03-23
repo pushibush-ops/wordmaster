@@ -126,6 +126,10 @@ async function feedPet(foodId) {
   pet.hunger = Math.min(100, pet.hunger + food.restore);
   pet.lastFeedDate = new Date().toISOString().split('T')[0];
   await db.put(STORE_PET, pet);
+
+  // 添加好感度
+  await addFavorability(3);  // 喂食 +3 好感度
+
   return true;
 }
 
