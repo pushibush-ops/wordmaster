@@ -23,6 +23,15 @@ if ('serviceWorker' in navigator) {
 let audioInitialized = false;
 function initAudio() {
   if (audioInitialized) return;
+
+  // 预加载语音
+  speechSynthesis.getVoices();
+  if (speechSynthesis.getVoices().length === 0) {
+    speechSynthesis.addEventListener('voiceschanged', () => {
+      console.log('Voices loaded:', speechSynthesis.getVoices().length);
+    });
+  }
+
   const utterance = new SpeechSynthesisUtterance(' ');
   utterance.volume = 0;
   speechSynthesis.speak(utterance);
@@ -252,9 +261,26 @@ async function answerWord(isCorrect) {
 }
 
 // 发音
-function speakWord(word) {
-  const utterance = new SpeechSynthesisUtterance(word);
+function speakWord(text) {
+  // 停止当前播放
+  speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = 'en-US';
+  utterance.rate = 0.9;  // 稍慢一点更清晰
+  utterance.pitch = 1.0;
+  utterance.volume = 1.0;
+
+  // 尝试选择更好的语音
+  const voices = speechSynthesis.getVoices();
+  const preferredVoice = voices.find(v =>
+    v.lang.includes('en') && v.name.includes('Google')
+  ) || voices.find(v => v.lang.includes('en-US'));
+
+  if (preferredVoice) {
+    utterance.voice = preferredVoice;
+  }
+
   speechSynthesis.speak(utterance);
 }
 
