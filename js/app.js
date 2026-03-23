@@ -185,6 +185,9 @@ function renderStudy(container) {
       </div>
     </div>
   `;
+
+  // 自动发音
+  setTimeout(() => speakWord(word.word), 500);
 }
 
 // 显示答案
