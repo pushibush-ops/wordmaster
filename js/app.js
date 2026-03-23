@@ -260,21 +260,39 @@ async function answerWord(isCorrect) {
   render();
 }
 
-// 发音
-function speakWord(text) {
+// 发音 - 使用 Google TTS 或系统语音
+function speakWord(text, isExample = false) {
   // 停止当前播放
   speechSynthesis.cancel();
 
+  // 如果有网络，优先使用 Google TTS
+  if (navigator.onLine) {
+    playGoogleTTS(text, isExample);
+  } else {
+    playSystemTTS(text);
+  }
+}
+
+// Google TTS (需要网络)
+function playGoogleTTS(text, isExample) {
+  const audio = new Audio();
+  // 使用 Google Translate TTS
+  const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=en&q=${encodeURIComponent(text)}&client=tw-ob`;
+  audio.src = url;
+  audio.play().catch(() => playSystemTTS(text));
+}
+
+// 系统 TTS (离线备用)
+function playSystemTTS(text) {
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = 'en-US';
-  utterance.rate = 0.9;  // 稍慢一点更清晰
+  utterance.rate = 0.85;
   utterance.pitch = 1.0;
   utterance.volume = 1.0;
 
-  // 尝试选择更好的语音
   const voices = speechSynthesis.getVoices();
   const preferredVoice = voices.find(v =>
-    v.lang.includes('en') && v.name.includes('Google')
+    v.lang.includes('en') && (v.name.includes('Google') || v.name.includes('Premium'))
   ) || voices.find(v => v.lang.includes('en-US'));
 
   if (preferredVoice) {
