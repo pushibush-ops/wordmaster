@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wordmaster-v1';
+const CACHE_NAME = 'wordmaster-v2';
 const ASSETS = [
   '/',
   '/index.html',
@@ -7,6 +7,7 @@ const ASSETS = [
   '/js/db.js',
   '/js/words.js',
   '/js/algorithm.js',
+  '/js/pet.js',
   '/manifest.json'
 ];
 

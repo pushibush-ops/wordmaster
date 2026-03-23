@@ -73,11 +73,32 @@ function render() {
 
 // 主页
 async function renderHome(container) {
+  // 检查并更新每日饥饿值
+  await checkDailyHunger();
+  const pet = await getPet();
+
+  // 检查是否已领养宠物
+  if (pet && !pet.adopted) {
+    renderPetSelect(container);
+    return;
+  }
+
   const stats = await getStudyStats();
 
   container.innerHTML = `
     <div class="container">
       <h1 class="title">单词小助手</h1>
+
+      ${pet && pet.type ? `
+        <div class="pet-bar" onclick="togglePetPanel()">
+          <div class="pet-emoji">${PET_TYPES.find(p => p.type === pet.type)?.emoji || '🐱'} ${pet.name}</div>
+          <div class="pet-hunger-bar">
+            <div class="pet-hunger-fill" style="width: ${pet.hunger}%"></div>
+          </div>
+          <div class="pet-hunger-text">${getPetMood(pet.hunger)} ${pet.hunger}%</div>
+        </div>
+        <div class="pet-panel hidden" id="petPanel"></div>
+      ` : ''}
 
       <div class="stats-card">
         <div class="stat-item">
@@ -255,6 +276,11 @@ async function answerWord(isCorrect) {
     level: result.level,
     reviewCount: (word.reviewCount || 0) + 1
   });
+
+  // 回答正确获得金币
+  if (isCorrect) {
+    await addCoins();
+  }
 
   currentIndex++;
   render();
@@ -534,4 +560,145 @@ async function resetProgress() {
 
   alert('学习进度已重置！');
   navigate(PAGES.HOME);
+}
+
+// 切换宠物面板显示
+function togglePetPanel() {
+  const panel = document.getElementById('petPanel');
+  if (panel) {
+    panel.classList.toggle('hidden');
+    document.querySelector('.pet-bar')?.classList.toggle('expanded');
+    if (!panel.classList.contains('hidden')) {
+      renderPetPanel();
+    }
+  }
+}
+
+// 渲染宠物面板
+async function renderPetPanel() {
+  const pet = await getPet();
+  const petType = PET_TYPES.find(p => p.type === pet.type);
+
+  const panel = document.getElementById('petPanel');
+  if (!panel) return;
+
+  panel.innerHTML = `
+    <div class="pet-panel-content">
+      <div class="pet-panel-header">
+        <span class="pet-large">${petType?.emoji || '🐱'}</span>
+        <span class="pet-name">${pet.name}</span>
+        <button class="pet-close" onclick="togglePetPanel()">✕</button>
+      </div>
+
+      <div class="pet-stats">
+        <div class="pet-stat">
+          <span class="pet-stat-label">饥饿</span>
+          <div class="pet-stat-bar">
+            <div class="pet-stat-fill" style="width: ${pet.hunger}%"></div>
+          </div>
+          <span>${pet.hunger}%</span>
+        </div>
+        <div class="pet-stat">
+          <span class="pet-stat-label">🪙 金币</span>
+          <span class="pet-coins">${pet.coins}</span>
+        </div>
+      </div>
+
+      <div class="food-shop">
+        ${FOODS.map(food => `
+          <button class="food-btn" onclick="buyFood('${food.id}')">
+            <span class="food-emoji">${food.emoji}</span>
+            <span class="food-name">${food.name}</span>
+            <span class="food-price">${food.price}金</span>
+            <span class="food-restore">+${food.restore}</span>
+          </button>
+        `).join('')}
+      </div>
+
+      <div class="pet-actions">
+        <button class="btn" onclick="showPetSelect()">🎨 更换宠物</button>
+        <button class="btn" onclick="showRenameInput()">✏️ 修改名字</button>
+      </div>
+    </div>
+  `;
+}
+
+// 购买食物
+async function buyFood(foodId) {
+  const success = await feedPet(foodId);
+  if (success) {
+    renderPetPanel();
+  }
+}
+
+// 宠物选择界面
+function renderPetSelect(container) {
+  container.innerHTML = `
+    <div class="container pet-select-container">
+      <h1 class="title">选择你的小伙伴</h1>
+
+      <div class="pet-options">
+        ${PET_TYPES.map(p => `
+          <div class="pet-option" onclick="selectPet('${p.type}')">
+            <span class="pet-option-emoji">${p.emoji}</span>
+            <span class="pet-option-name">${p.name}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// 选择宠物
+async function selectPet(type) {
+  await createPet(type, '小毛球');
+  render();
+}
+
+// 显示更换宠物界面
+function showPetSelect() {
+  const panel = document.getElementById('petPanel');
+  if (!panel) return;
+  panel.innerHTML = `
+    <div class="pet-panel-content">
+      <h3>更换宠物</h3>
+      <div class="pet-options-grid">
+        ${PET_TYPES.map(p => `
+          <button class="pet-option-btn" onclick="changePet('${p.type}')">
+            ${p.emoji} ${p.name}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// 更换宠物
+async function changePet(type) {
+  await createPet(type);
+  render();
+}
+
+// 显示改名界面
+function showRenameInput() {
+  const panel = document.getElementById('petPanel');
+  if (!panel) return;
+  panel.innerHTML = `
+    <div class="pet-panel-content">
+      <h3>修改名字</h3>
+      <input type="text" id="petNameInput" class="pet-name-input" placeholder="输入新名字" maxlength="10">
+      <button class="btn btn-primary" onclick="submitRename()">确定</button>
+    </div>
+  `;
+}
+
+// 提交改名
+async function submitRename() {
+  const newName = document.getElementById('petNameInput').value.trim();
+  if (!newName) {
+    alert('请输入名字');
+    return;
+  }
+  await renamePet(newName);
+  render();
 }

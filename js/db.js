@@ -1,9 +1,10 @@
 // IndexedDB 封装
 const DB_NAME = 'wordmaster';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_WORDS = 'words';      // 词库
 const STORE_RECORDS = 'records';  // 学习记录
 const STORE_SETTINGS = 'settings'; // 设置
+const STORE_PET = 'pet';  // 电子宠物
 
 class DB {
   constructor() {
@@ -30,6 +31,9 @@ class DB {
         }
         if (!db.objectStoreNames.contains(STORE_SETTINGS)) {
           db.createObjectStore(STORE_SETTINGS, { keyPath: 'key' });
+        }
+        if (!db.objectStoreNames.contains(STORE_PET)) {
+          db.createObjectStore(STORE_PET, { keyPath: 'id' });
         }
       };
     });
@@ -82,6 +86,8 @@ const db = new DB();
 async function initDatabase() {
   await db.init();
   await initBuiltInWordlists();
+  // 初始化宠物数据
+  await initPet();
 
   // 初始化默认设置
   const settings = await db.get(STORE_SETTINGS, 'daily');
@@ -90,6 +96,26 @@ async function initDatabase() {
       key: 'daily',
       newWords: 10,
       reviewLimit: 50
+    });
+  }
+}
+
+// 初始化电子宠物
+async function initPet() {
+  const pet = await db.get(STORE_PET, 'pet');
+  if (!pet) {
+    // 首次创建，会在首次选择时被覆盖
+    await db.put(STORE_PET, {
+      id: 'pet',
+      type: 'cat',
+      name: '小毛球',
+      hunger: 100,
+      coins: 0,
+      todayCoins: 0,
+      lastHungerDate: null,
+      lastFeedDate: null,
+      adopted: false,
+      createdAt: new Date().toISOString()
     });
   }
 }
