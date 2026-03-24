@@ -11,6 +11,7 @@ let currentPage = PAGES.HOME;
 let currentWordList = null;
 let studyQueue = [];
 let currentIndex = 0;
+let answeredCount = 0; // 实际已回答的单词数（不包括重新加入的）
 
 // 注册 Service Worker
 if ('serviceWorker' in navigator) {
@@ -197,6 +198,7 @@ async function startStudy() {
   // 合并：复习优先
   studyQueue = [...limitedReview, ...newWords];
   currentIndex = 0;
+  answeredCount = 0;
 
   if (studyQueue.length === 0) {
     alert('今天的学习任务已完成！');
@@ -230,7 +232,7 @@ function renderStudy(container) {
   }
 
   const word = studyQueue[currentIndex];
-  const progress = `${currentIndex + 1}/${studyQueue.length}`;
+  const progress = `${answeredCount + 1}/${studyQueue.length}`;
 
   container.innerHTML = `
     <div class="container">
@@ -318,6 +320,7 @@ async function answerWord(isCorrect) {
   } else {
     // 不认识：将单词重新插入队列末尾
     studyQueue.push(word);
+    answeredCount++;
   }
 
   currentIndex++;
@@ -657,27 +660,6 @@ async function renderPetPanel() {
             <span class="food-restore">+${food.restore}</span>
           </button>
         `).join('')}
-      </div>
-
-      <div class="action-buttons-section">
-        <h4>🎭 动作互动</h4>
-        <div class="action-buttons">
-          ${(function() {
-            const unlockedActions = pet?.unlockedActions || ['stretch', 'tail', 'sleep'];
-            return ACTIONS.map(action => {
-              const isUnlocked = unlockedActions.includes(action.id) ||
-                (pet?.favorability >= action.favorability && action.favorability > 0);
-              const locked = !isUnlocked;
-
-              return `<button class="action-btn ${locked ? 'locked' : ''}"
-                onclick="handleActionClick('${action.id}')"
-                ${locked ? 'disabled' : ''}>
-                ${action.emoji} ${action.name}
-                ${locked ? `🔒${action.favorability}` : ''}
-              </button>`;
-            }).join('');
-          })()}
-        </div>
       </div>
 
       <div class="checkin-section">
