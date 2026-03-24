@@ -298,32 +298,32 @@ function showAnswer() {
 // 回答单词
 async function answerWord(isCorrect) {
   const word = studyQueue[currentIndex];
-  const result = calculateNextReview(word.level || 0, isCorrect);
 
-  // 保存学习记录
-  await db.put(STORE_RECORDS, {
-    wordId: word.wordId,
-    word: word.word,
-    definition: word.definition,
-    phonetic: word.phonetic,
-    lastReview: new Date().toISOString(),
-    nextReview: result.nextReview.toISOString(),
-    level: result.level,
-    reviewCount: (word.reviewCount || 0) + 1
-  });
-
-  // 回答正确获得金币
   if (isCorrect) {
+    const result = calculateNextReview(word.level || 0, true);
+
+    // 保存学习记录（只有认识时才保存）
+    await db.put(STORE_RECORDS, {
+      wordId: word.wordId,
+      word: word.word,
+      definition: word.definition,
+      phonetic: word.phonetic,
+      lastReview: new Date().toISOString(),
+      nextReview: result.nextReview.toISOString(),
+      level: result.level,
+      reviewCount: (word.reviewCount || 0) + 1
+    });
+
     await addCoins();
     answeredCount++; // 认识才计入计数
-    const result = await addFavorability(1);
-    if (result.unlocked && result.newActions.length > 0) {
-      showPetDialogue('我又学会新动作啦！🎉 ' + result.newActions.map(a => a.emoji).join(' '));
+    const favResult = await addFavorability(1);
+    if (favResult.unlocked && favResult.newActions.length > 0) {
+      showPetDialogue('我又学会新动作啦！🎉 ' + favResult.newActions.map(a => a.emoji).join(' '));
     }
   } else {
     // 不认识：将单词重新插入队列末尾
     studyQueue.push(word);
-    // 不计入计数
+    // 不计入计数，也不保存学习记录
   }
 
   currentIndex++;
