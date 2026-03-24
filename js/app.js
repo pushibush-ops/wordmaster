@@ -300,25 +300,34 @@ async function answerWord(isCorrect) {
   const word = studyQueue[currentIndex];
 
   if (isCorrect) {
-    const result = calculateNextReview(word.level || 0, true);
+    // 检查是否已经第一次认识过了
+    if (word.seenOnce) {
+      // 第二次认识：算真正背会
+      const result = calculateNextReview(word.level || 0, true);
 
-    // 保存学习记录（只有认识时才保存）
-    await db.put(STORE_RECORDS, {
-      wordId: word.wordId,
-      word: word.word,
-      definition: word.definition,
-      phonetic: word.phonetic,
-      lastReview: new Date().toISOString(),
-      nextReview: result.nextReview.toISOString(),
-      level: result.level,
-      reviewCount: (word.reviewCount || 0) + 1
-    });
+      // 保存学习记录
+      await db.put(STORE_RECORDS, {
+        wordId: word.wordId,
+        word: word.word,
+        definition: word.definition,
+        phonetic: word.phonetic,
+        lastReview: new Date().toISOString(),
+        nextReview: result.nextReview.toISOString(),
+        level: result.level,
+        reviewCount: (word.reviewCount || 0) + 1
+      });
 
-    await addCoins();
-    answeredCount++; // 认识才计入计数
-    const favResult = await addFavorability(1);
-    if (favResult.unlocked && favResult.newActions.length > 0) {
-      showPetDialogue('我又学会新动作啦！🎉 ' + favResult.newActions.map(a => a.emoji).join(' '));
+      await addCoins();
+      answeredCount++; // 计入计数
+      const favResult = await addFavorability(1);
+      if (favResult.unlocked && favResult.newActions.length > 0) {
+        showPetDialogue('我又学会新动作啦！🎉 ' + favResult.newActions.map(a => a.emoji).join(' '));
+      }
+    } else {
+      // 第一次认识：标记需要再次复习，放入队列末尾
+      word.seenOnce = true;
+      studyQueue.push(word);
+      // 不计入计数，不保存记录，不加金币
     }
   } else {
     // 不认识：将单词重新插入队列末尾
