@@ -313,6 +313,7 @@ async function answerWord(isCorrect) {
   // 回答正确获得金币
   if (isCorrect) {
     await addCoins();
+    answeredCount++; // 认识才计入计数
     const result = await addFavorability(1);
     if (result.unlocked && result.newActions.length > 0) {
       showPetDialogue('我又学会新动作啦！🎉 ' + result.newActions.map(a => a.emoji).join(' '));
@@ -320,7 +321,7 @@ async function answerWord(isCorrect) {
   } else {
     // 不认识：将单词重新插入队列末尾
     studyQueue.push(word);
-    answeredCount++;
+    // 不计入计数
   }
 
   currentIndex++;
