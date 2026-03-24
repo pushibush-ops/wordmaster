@@ -76,18 +76,44 @@ async function createPet(type, name = '小毛球') {
   });
 }
 
-// 每日饥饿值检查
+// 饥饿值检查（每小时下降1点）
 async function checkDailyHunger() {
   const pet = await getPet();
   if (!pet || !pet.type) return null; // 未领养
 
-  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentDate = now.toISOString().split('T')[0];
 
-  // 检查是否今天已经扣过
-  if (pet.lastHungerDate !== today) {
-    // 扣除饥饿值，最少为0
-    pet.hunger = Math.max(0, pet.hunger - 30);
-    pet.lastHungerDate = today;
+  // 如果没有记录过饥饿时间，或者日期变了
+  if (!pet.lastHungerDate || !pet.lastHungerHour) {
+    pet.lastHungerDate = currentDate;
+    pet.lastHungerHour = currentHour;
+    pet.todayCoins = 0;
+    await db.put(STORE_PET, pet);
+    return pet;
+  }
+
+  // 如果是同一天，计算小时差
+  if (pet.lastHungerDate === currentDate) {
+    const hoursPassed = currentHour - pet.lastHungerHour;
+    if (hoursPassed > 0) {
+      // 每小时下降1点
+      pet.hunger = Math.max(0, pet.hunger - hoursPassed);
+      pet.lastHungerHour = currentHour;
+      await db.put(STORE_PET, pet);
+    }
+  } else {
+    // 新的一天：计算跨天的小时数
+    // 从上次记录的时间到午夜 + 当前小时
+    const hoursUntilMidnight = 24 - pet.lastHungerHour;
+    const hoursToday = currentHour;
+    const totalHours = hoursUntilMidnight + hoursToday;
+
+    // 扣除跨天的饥饿值
+    pet.hunger = Math.max(0, pet.hunger - totalHours);
+    pet.lastHungerDate = currentDate;
+    pet.lastHungerHour = currentHour;
     pet.todayCoins = 0; // 重置今日金币
     await db.put(STORE_PET, pet);
   }

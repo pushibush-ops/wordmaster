@@ -315,6 +315,9 @@ async function answerWord(isCorrect) {
     if (result.unlocked && result.newActions.length > 0) {
       showPetDialogue('我又学会新动作啦！🎉 ' + result.newActions.map(a => a.emoji).join(' '));
     }
+  } else {
+    // 不认识：将单词重新插入队列末尾
+    studyQueue.push(word);
   }
 
   currentIndex++;
