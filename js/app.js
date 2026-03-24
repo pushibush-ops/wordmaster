@@ -13,6 +13,7 @@ let studyQueue = [];
 let currentIndex = 0;
 let answeredCount = 0; // 实际已回答的单词数（不包括重新加入的）
 let initialQueueLength = 0; // 初始队列长度，用于显示分母
+let isReviewMode = false; // 是否是复习模式
 
 // 注册 Service Worker
 if ('serviceWorker' in navigator) {
@@ -75,6 +76,8 @@ function render() {
 
 // 主页
 async function renderHome(container) {
+  isReviewMode = false; // 重置复习模式
+
   // 检查并更新每日饥饿值
   await checkDailyHunger();
   const pet = await getPet();
@@ -118,6 +121,10 @@ async function renderHome(container) {
           <span class="stat-label">今日待复习</span>
         </div>
         <div class="stat-item">
+          <span class="stat-value">${stats.todayReviewed}</span>
+          <span class="stat-label">今日已复习</span>
+        </div>
+        <div class="stat-item">
           <span class="stat-value">${stats.todayLearned}</span>
           <span class="stat-label">今日已学</span>
         </div>
@@ -129,6 +136,10 @@ async function renderHome(container) {
 
       <button class="btn btn-primary btn-large" onclick="startStudy()">
         开始学习
+      </button>
+
+      <button class="btn btn-secondary btn-large" onclick="startReview()">
+        复习
       </button>
 
       <div class="nav-links">
@@ -173,12 +184,19 @@ async function getStudyStats() {
     new Date(r.nextReview).toDateString() <= today
   ).length;
 
+  // 今日已复习（当天复习过的单词数，排除新学的第一次复习）
+  const todayReviewed = records.filter(r =>
+    r.lastReview && new Date(r.lastReview).toDateString() === today && r.reviewCount > 0
+  ).length;
+
+  // 今日新学（第一次学习的）
   const todayLearned = records.filter(r =>
-    r.lastReview && new Date(r.lastReview).toDateString() === today
+    r.lastReview && new Date(r.lastReview).toDateString() === today && r.reviewCount === 1
   ).length;
 
   return {
     todayReview,
+    todayReviewed,
     todayLearned,
     streak: 1,
     total: records.length
@@ -216,14 +234,39 @@ async function startStudy() {
   render();
 }
 
+// 开始复习
+async function startReview() {
+  // 只获取复习单词
+  const reviewWords = await getTodayReviewWords();
+
+  if (reviewWords.length === 0) {
+    alert('今天没有需要复习的单词！');
+    return;
+  }
+
+  studyQueue = reviewWords;
+  currentIndex = 0;
+  answeredCount = 0;
+  initialQueueLength = studyQueue.length;
+  isReviewMode = true;
+
+  // 播放一个静音音频以启用自动播放（移动端兼容）
+  const dummy = new SpeechSynthesisUtterance(' ');
+  dummy.volume = 0;
+  speechSynthesis.speak(dummy);
+
+  navigate(PAGES.STUDY);
+  render();
+}
+
 // 学习页面
 function renderStudy(container) {
   if (currentIndex >= studyQueue.length) {
     container.innerHTML = `
       <div class="container">
         <div class="study-complete">
-          <h2>🎉 学习完成！</h2>
-          <p>今日学习: ${initialQueueLength} 个单词</p>
+          <h2>🎉 ${isReviewMode ? '复习' : '学习'}完成！</h2>
+          <p>${isReviewMode ? '今日复习' : '今日学习'}: ${initialQueueLength} 个单词</p>
           <button class="btn btn-primary" onclick="navigate('${PAGES.HOME}')">
             返回主页
           </button>
@@ -300,12 +343,10 @@ async function answerWord(isCorrect) {
   const word = studyQueue[currentIndex];
 
   if (isCorrect) {
-    // 检查是否已经第一次认识过了
-    if (word.seenOnce) {
-      // 第二次认识：算真正背会
+    // 复习模式：一次认识就计入已背
+    if (isReviewMode) {
       const result = calculateNextReview(word.level || 0, true);
 
-      // 保存学习记录
       await db.put(STORE_RECORDS, {
         wordId: word.wordId,
         word: word.word,
@@ -318,21 +359,43 @@ async function answerWord(isCorrect) {
       });
 
       await addCoins();
-      answeredCount++; // 计入计数
+      answeredCount++;
       const favResult = await addFavorability(1);
       if (favResult.unlocked && favResult.newActions.length > 0) {
         showPetDialogue('我又学会新动作啦！🎉 ' + favResult.newActions.map(a => a.emoji).join(' '));
       }
     } else {
-      // 第一次认识：标记需要再次复习，放入队列末尾
-      word.seenOnce = true;
-      studyQueue.push(word);
-      // 不计入计数，不保存记录，不加金币
+      // 学习模式：需要两次认识才计入已背
+      if (word.seenOnce) {
+        // 第二次认识：算真正背会
+        const result = calculateNextReview(word.level || 0, true);
+
+        await db.put(STORE_RECORDS, {
+          wordId: word.wordId,
+          word: word.word,
+          definition: word.definition,
+          phonetic: word.phonetic,
+          lastReview: new Date().toISOString(),
+          nextReview: result.nextReview.toISOString(),
+          level: result.level,
+          reviewCount: (word.reviewCount || 0) + 1
+        });
+
+        await addCoins();
+        answeredCount++;
+        const favResult = await addFavorability(1);
+        if (favResult.unlocked && favResult.newActions.length > 0) {
+          showPetDialogue('我又学会新动作啦！🎉 ' + favResult.newActions.map(a => a.emoji).join(' '));
+        }
+      } else {
+        // 第一次认识：标记需要再次复习，放入队列末尾
+        word.seenOnce = true;
+        studyQueue.push(word);
+      }
     }
   } else {
     // 不认识：将单词重新插入队列末尾
     studyQueue.push(word);
-    // 不计入计数，也不保存学习记录
   }
 
   currentIndex++;
