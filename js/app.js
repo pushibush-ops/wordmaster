@@ -207,14 +207,10 @@ async function getStudyStats() {
 async function startStudy() {
   const settings = await db.get(STORE_SETTINGS, 'daily') || { newWords: 10 };
 
-  // 获取新词
+  // 只获取新词
   const newWords = await getNewWords(settings.newWords);
 
-  // 获取复习单词（不限制数量）
-  const reviewWords = await getTodayReviewWords();
-
-  // 合并：新词在前，复习在后
-  studyQueue = [...newWords, ...reviewWords];
+  studyQueue = newWords;
   currentIndex = 0;
   answeredCount = 0;
   initialQueueLength = studyQueue.length;
