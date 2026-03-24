@@ -234,19 +234,16 @@ async function startReview() {
   // 只获取复习单词
   const reviewWords = await getTodayReviewWords();
 
-  // 初始化今日已复习计数（如果还没有）
+  // 初始化今日已复习计数
   const today = new Date().toDateString();
   const todayReviewedKey = `todayReviewed_${today}`;
-  if (!localStorage.getItem(todayReviewedKey)) {
-    // 从数据库获取今天已复习的数量
-    // 只统计今天复习的单词（nextReview <= today 的单词在今天被复习了）
-    const records = await db.getAll(STORE_RECORDS);
-    const reviewed = records.filter(r =>
-      r.lastReview && new Date(r.lastReview).toDateString() === today &&
-      r.nextReview && new Date(r.nextReview).toDateString() <= today
-    ).length;
-    localStorage.setItem(todayReviewedKey, reviewed);
-  }
+  // 从数据库获取今天已复习的数量（根据数据库实时计算）
+  const records = await db.getAll(STORE_RECORDS);
+  const reviewed = records.filter(r =>
+    r.lastReview && new Date(r.lastReview).toDateString() === today &&
+    r.nextReview && new Date(r.nextReview).toDateString() <= today
+  ).length;
+  localStorage.setItem(todayReviewedKey, reviewed);
 
   if (reviewWords.length === 0) {
     alert('今天没有需要复习的单词！');
@@ -682,6 +679,11 @@ async function resetProgress() {
   for (const record of records) {
     await db.delete(STORE_RECORDS, record.wordId);
   }
+
+  // 清除今日已复习计数
+  const today = new Date().toDateString();
+  const todayReviewedKey = `todayReviewed_${today}`;
+  localStorage.setItem(todayReviewedKey, 0);
 
   alert('学习进度已重置！');
   navigate(PAGES.HOME);
