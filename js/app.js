@@ -12,6 +12,7 @@ let currentWordList = null;
 let studyQueue = [];
 let currentIndex = 0;
 let answeredCount = 0; // 实际已回答的单词数（不包括重新加入的）
+let initialQueueLength = 0; // 初始队列长度，用于显示分母
 
 // 注册 Service Worker
 if ('serviceWorker' in navigator) {
@@ -199,6 +200,7 @@ async function startStudy() {
   studyQueue = [...limitedReview, ...newWords];
   currentIndex = 0;
   answeredCount = 0;
+  initialQueueLength = studyQueue.length;
 
   if (studyQueue.length === 0) {
     alert('今天的学习任务已完成！');
@@ -221,7 +223,7 @@ function renderStudy(container) {
       <div class="container">
         <div class="study-complete">
           <h2>🎉 学习完成！</h2>
-          <p>今日学习: ${studyQueue.length} 个单词</p>
+          <p>今日学习: ${initialQueueLength} 个单词</p>
           <button class="btn btn-primary" onclick="navigate('${PAGES.HOME}')">
             返回主页
           </button>
@@ -232,7 +234,7 @@ function renderStudy(container) {
   }
 
   const word = studyQueue[currentIndex];
-  const progress = `${answeredCount + 1}/${studyQueue.length}`;
+  const progress = `${answeredCount + 1}/${initialQueueLength}`;
 
   container.innerHTML = `
     <div class="container">
