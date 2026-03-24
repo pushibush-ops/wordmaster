@@ -748,12 +748,6 @@ async function renderPetPanel() {
         `).join('')}
       </div>
 
-      <div class="checkin-section">
-        <button class="checkin-btn" onclick="handleCheckIn()" ${(pet?.lastCheckInDate === new Date().toISOString().split('T')[0]) ? 'disabled' : ''}>
-          ${(pet?.lastCheckInDate === new Date().toISOString().split('T')[0]) ? '✅ 已签到' : '📅 签到'} ${pet?.checkInDays ? `(连续${pet.checkInDays}天)` : ''}
-        </button>
-      </div>
-
       <div class="pet-actions">
         <button class="btn" onclick="showRenameInput()">✏️ 修改名字</button>
       </div>
@@ -843,14 +837,6 @@ async function submitRename() {
   }
   await renamePet(newName);
   render();
-}
-
-// 签到处理函数
-async function handleCheckIn() {
-  const result = await dailyCheckIn();
-  // 使用对话气泡显示结果
-  showPetDialogue(result.message);
-  renderPetPanel();
 }
 
 // 动作点击处理函数
