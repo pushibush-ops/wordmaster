@@ -184,10 +184,9 @@ async function getStudyStats() {
     new Date(r.nextReview).toDateString() <= today
   ).length;
 
-  // 今日已复习（当天复习过的单词数，排除新学的第一次复习）
-  const todayReviewed = records.filter(r =>
-    r.lastReview && new Date(r.lastReview).toDateString() === today && r.reviewCount > 0
-  ).length;
+  // 今日已复习（从 localStorage 读取实时进度）
+  const todayReviewedKey = `todayReviewed_${today}`;
+  let todayReviewed = parseInt(localStorage.getItem(todayReviewedKey)) || 0;
 
   // 今日新学（第一次学习的）
   const todayLearned = records.filter(r =>
@@ -238,6 +237,18 @@ async function startStudy() {
 async function startReview() {
   // 只获取复习单词
   const reviewWords = await getTodayReviewWords();
+
+  // 初始化今日已复习计数（如果还没有）
+  const today = new Date().toDateString();
+  const todayReviewedKey = `todayReviewed_${today}`;
+  if (!localStorage.getItem(todayReviewedKey)) {
+    // 从数据库获取今天已复习的数量
+    const records = await db.getAll(STORE_RECORDS);
+    const reviewed = records.filter(r =>
+      r.lastReview && new Date(r.lastReview).toDateString() === today && r.reviewCount > 0
+    ).length;
+    localStorage.setItem(todayReviewedKey, reviewed);
+  }
 
   if (reviewWords.length === 0) {
     alert('今天没有需要复习的单词！');
@@ -360,6 +371,12 @@ async function answerWord(isCorrect) {
 
       await addCoins();
       answeredCount++;
+
+      // 更新今日已复习的实时进度
+      const today = new Date().toDateString();
+      const todayReviewedKey = `todayReviewed_${today}`;
+      const currentReviewed = parseInt(localStorage.getItem(todayReviewedKey)) || 0;
+      localStorage.setItem(todayReviewedKey, currentReviewed + 1);
       const favResult = await addFavorability(1);
       if (favResult.unlocked && favResult.newActions.length > 0) {
         showPetDialogue('我又学会新动作啦！🎉 ' + favResult.newActions.map(a => a.emoji).join(' '));
