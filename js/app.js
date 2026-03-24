@@ -117,8 +117,8 @@ async function renderHome(container) {
 
       <div class="stats-card">
         <div class="stat-item">
-          <span class="stat-value">${stats.todayReview}</span>
-          <span class="stat-label">今日待复习</span>
+          <span class="stat-value">${stats.pendingReview}</span>
+          <span class="stat-label">待复习</span>
         </div>
         <div class="stat-item">
           <span class="stat-value">${stats.todayReviewed}</span>
@@ -180,7 +180,8 @@ async function getStudyStats() {
   const records = await db.getAll(STORE_RECORDS);
   const today = new Date().toDateString();
 
-  const todayReview = records.filter(r =>
+  // 待复习：所有需要复习的单词数量（不限于今天）
+  const pendingReview = records.filter(r =>
     new Date(r.nextReview).toDateString() <= today
   ).length;
 
@@ -194,7 +195,7 @@ async function getStudyStats() {
   ).length;
 
   return {
-    todayReview,
+    pendingReview,
     todayReviewed,
     todayLearned,
     streak: 1,
@@ -204,17 +205,16 @@ async function getStudyStats() {
 
 // 开始学习
 async function startStudy() {
-  const settings = await db.get(STORE_SETTINGS, 'daily') || { newWords: 10, reviewLimit: 50 };
-
-  // 获取复习单词
-  const reviewWords = await getTodayReviewWords();
-  const limitedReview = reviewWords.slice(0, settings.reviewLimit);
+  const settings = await db.get(STORE_SETTINGS, 'daily') || { newWords: 10 };
 
   // 获取新词
   const newWords = await getNewWords(settings.newWords);
 
-  // 合并：复习优先
-  studyQueue = [...limitedReview, ...newWords];
+  // 获取复习单词（不限制数量）
+  const reviewWords = await getTodayReviewWords();
+
+  // 合并：新词在前，复习在后
+  studyQueue = [...newWords, ...reviewWords];
   currentIndex = 0;
   answeredCount = 0;
   initialQueueLength = studyQueue.length;
@@ -614,10 +614,6 @@ async function renderSettings(container) {
           <input type="number" id="newWordsSetting" value="${settings.newWords}" min="1" max="50">
         </div>
 
-        <div class="setting-item">
-          <label>每日复习上限</label>
-          <input type="number" id="reviewLimitSetting" value="${settings.reviewLimit}" min="10" max="200">
-        </div>
       </div>
 
       <div class="settings-section">
@@ -646,12 +642,10 @@ async function renderSettings(container) {
 // 保存设置
 async function saveSettings() {
   const newWords = parseInt(document.getElementById('newWordsSetting').value);
-  const reviewLimit = parseInt(document.getElementById('reviewLimitSetting').value);
 
   await db.put(STORE_SETTINGS, {
     key: 'daily',
-    newWords,
-    reviewLimit
+    newWords
   });
 
   alert('设置已保存！');
