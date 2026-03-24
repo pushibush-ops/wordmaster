@@ -2,7 +2,7 @@
   "name": "单词小助手",
   "short_name": "单词助手",
   "description": "专注背单词的学习工具",
-  "start_url": "/",
+  "start_url": "/wordmaster/",
   "display": "standalone",
   "background_color": "#1a1a2e",
   "theme_color": "#1a1a2e",
