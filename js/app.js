@@ -239,9 +239,11 @@ async function startReview() {
   const todayReviewedKey = `todayReviewed_${today}`;
   if (!localStorage.getItem(todayReviewedKey)) {
     // 从数据库获取今天已复习的数量
+    // 只统计今天复习的单词（nextReview <= today 的单词在今天被复习了）
     const records = await db.getAll(STORE_RECORDS);
     const reviewed = records.filter(r =>
-      r.lastReview && new Date(r.lastReview).toDateString() === today && r.reviewCount > 0
+      r.lastReview && new Date(r.lastReview).toDateString() === today &&
+      r.nextReview && new Date(r.nextReview).toDateString() <= today
     ).length;
     localStorage.setItem(todayReviewedKey, reviewed);
   }
