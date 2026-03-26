@@ -34,14 +34,29 @@ function addDays(date, days) {
   return result;
 }
 
-// 获取今日待复习的单词
+// 获取今日待复习的单词（只显示今天应该复习的，且今天还没有复习过的）
 async function getTodayReviewWords() {
   const records = await db.getAll(STORE_RECORDS);
   const today = new Date().toDateString();
 
+  // 只返回：1) nextReview <= 今天 且 2) 今天还没有复习过（lastReview 不是今天）
   return records
-    .filter(r => new Date(r.nextReview).toDateString() <= today)
+    .filter(r => {
+      const nextReviewDate = new Date(r.nextReview).toDateString();
+      const lastReviewDate = r.lastReview ? new Date(r.lastReview).toDateString() : null;
+      return nextReviewDate <= today && lastReviewDate !== today;
+    })
     .sort((a, b) => new Date(a.nextReview) - new Date(b.nextReview));
+}
+
+// 获取当日待复习数量（仅今天需要复习的）
+async function getTodayPendingCount() {
+  const records = await db.getAll(STORE_RECORDS);
+  const today = new Date().toDateString();
+
+  return records.filter(r =>
+    new Date(r.nextReview).toDateString() <= today
+  ).length;
 }
 
 // 获取今日可学的新词
@@ -59,4 +74,10 @@ async function getNewWords(limit = 10) {
     .map(w => ({ ...w, wordId: `${activeList.id}_${w.word}` }))
     .filter(w => !learnedWordIds.has(w.wordId))
     .slice(0, limit);
+}
+
+// 更新待复习数量缓存（每次进入主页时重新计算当日待复习）
+async function updatePendingReviewCount() {
+  const count = await getTodayPendingCount();
+  localStorage.setItem('pendingReviewCount', count);
 }
