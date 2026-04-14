@@ -4,7 +4,8 @@ const PAGES = {
   STUDY: 'study',
   WORDLISTS: 'wordlists',
   SETTINGS: 'settings',
-  ADD_WORD: 'add-word'
+  ADD_WORD: 'add-word',
+  DICT: 'dict'
 };
 
 let currentPage = PAGES.HOME;
@@ -47,6 +48,9 @@ function render() {
       break;
     case PAGES.ADD_WORD:
       renderAddWord(app);
+      break;
+    case PAGES.DICT:
+      renderDict(app);
       break;
   }
 }
@@ -123,6 +127,9 @@ async function renderHome(container) {
       </button>
 
       <div class="nav-links">
+        <button class="nav-btn" onclick="navigate('${PAGES.DICT}')">
+          🔍 查词
+        </button>
         <button class="nav-btn" onclick="navigate('${PAGES.WORDLISTS}')">
           📚 词库管理
         </button>
@@ -506,7 +513,10 @@ async function renderAddWord(container) {
 
       <div class="form-group">
         <label>单词</label>
-        <input type="text" id="newWord" placeholder="例如: hello">
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="newWord" placeholder="例如: hello" style="flex: 1;">
+          <button class="btn" id="lookupWordBtn" onclick="lookupWordForAdd()">🔍</button>
+        </div>
       </div>
       <div class="form-group">
         <label>释义</label>
@@ -522,6 +532,44 @@ async function renderAddWord(container) {
       </button>
     </div>
   `;
+}
+
+// 辅助查询函数 - 在添加单词页面查询释义
+async function lookupWordForAdd() {
+  const wordInput = document.getElementById('newWord');
+  const defInput = document.getElementById('newDefinition');
+  const phoneticInput = document.getElementById('newPhonetic');
+
+  const word = wordInput.value.trim();
+  if (!word) {
+    alert('请输入要查询的单词');
+    return;
+  }
+
+  const btn = document.getElementById('lookupWordBtn');
+  btn.textContent = '...';
+  btn.disabled = true;
+
+  try {
+    const lang = isChinese(word) ? 'zh' : 'en';
+    const result = await translate(word, lang);
+
+    // 自动填充
+    if (!defInput.value && result.definitions.length > 0) {
+      defInput.value = result.definitions.join('; ');
+    }
+    if (!phoneticInput.value && result.phonetic) {
+      phoneticInput.value = result.phonetic;
+    }
+
+    // 发音
+    speakWord(word);
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    btn.textContent = '🔍';
+    btn.disabled = false;
+  }
 }
 
 // 保存新单词
@@ -882,4 +930,74 @@ function showActionAnimation(emoji) {
   anim.classList.add('animate');
 
   anim._timeout = setTimeout(() => anim.classList.remove('animate'), 1500);
+}
+
+// 显示单词查词浮层
+async function showWordLookup(word) {
+  const resultDiv = document.createElement('div');
+  resultDiv.className = 'lookup-popup';
+  resultDiv.id = 'lookupPopup';
+
+  resultDiv.innerHTML = '<div class="lookup-loading">查询中...</div>';
+  document.body.appendChild(resultDiv);
+
+  resultDiv.style.display = 'flex';
+
+  try {
+    const lang = isChinese(word) ? 'zh' : 'en';
+    const result = await translate(word, lang);
+
+    const defHtml = result.definitions.length > 0
+      ? result.definitions.map(d => `<div class="lookup-def">${d}</div>`).join('')
+      : '<div class="lookup-no-def">暂无释义</div>';
+
+    resultDiv.innerHTML = `
+      <div class="lookup-popup-content">
+        <div class="lookup-popup-header">
+          <h3>单词释义</h3>
+          <button class="pet-close" onclick="closeWordLookup()">✕</button>
+        </div>
+        <div class="lookup-word">${result.word}</div>
+        ${result.phonetic ? `<div class="lookup-phonetic">${result.phonetic}</div>` : ''}
+        <div class="lookup-section">
+          ${defHtml}
+        </div>
+        <div class="lookup-actions">
+          <button class="btn btn-primary" onclick="showCollectDialog('${result.word.replace(/'/g, "\\'")}', '${(result.definitions.join('; ') || '').replace(/'/g, "\\'")}', '${(result.phonetic || '').replace(/'/g, "\\'")}')">
+            ⭐ 收藏
+          </button>
+          <button class="btn" onclick="speakWord('${result.word.replace(/'/g, "\\'")}')">
+            🔊 发音
+          </button>
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    resultDiv.innerHTML = `
+      <div class="lookup-popup-content">
+        <div class="lookup-popup-header">
+          <h3>单词释义</h3>
+          <button class="pet-close" onclick="closeWordLookup()">✕</button>
+        </div>
+        <div class="lookup-error">
+          <p>❌ ${err.message}</p>
+          <button class="btn" onclick="retryWordLookup('${word.replace(/'/g, "\\'")}')">重试</button>
+        </div>
+      </div>
+    `;
+  }
+}
+
+// 重试查词
+async function retryWordLookup(word) {
+  closeWordLookup();
+  await showWordLookup(word);
+}
+
+// 关闭查词浮层
+function closeWordLookup() {
+  const popup = document.getElementById('lookupPopup');
+  if (popup) {
+    popup.remove();
+  }
 }
