@@ -775,3 +775,247 @@ body {
   font-weight: bold;
 }
 
+/* ===== 查词页样式 ===== */
+.dict-search-section {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.dict-search-input {
+  flex: 1;
+  padding: 12px 16px;
+  font-size: 16px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: #2a2a3e;
+  color: #fff;
+}
+
+.dict-result-section {
+  min-height: 200px;
+}
+
+.dict-placeholder {
+  text-align: center;
+  color: #888;
+  padding: 40px 20px;
+}
+
+.dict-loading {
+  text-align: center;
+  color: #888;
+  padding: 40px 20px;
+}
+
+.dict-error {
+  text-align: center;
+  color: #f44336;
+  padding: 40px 20px;
+}
+
+.dict-result-card {
+  background: #2a2a3e;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.dict-word-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.dict-word {
+  font-size: 28px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.dict-phonetic {
+  color: #888;
+  margin-bottom: 16px;
+}
+
+.dict-section {
+  margin-top: 16px;
+}
+
+.dict-section h4 {
+  color: #888;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.dict-def {
+  color: #fff;
+  padding: 6px 0;
+  border-bottom: 1px solid #333;
+}
+
+.dict-no-def {
+  color: #666;
+  font-style: italic;
+}
+
+.dict-example {
+  padding: 10px 0;
+  border-bottom: 1px solid #333;
+}
+
+.dict-example-en {
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.dict-example-cn {
+  color: #888;
+  font-size: 14px;
+}
+
+.dict-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+/* ===== 查词浮层样式 ===== */
+.lookup-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.lookup-popup-content {
+  background: #2a2a3e;
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  width: 360px;
+}
+
+.lookup-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.lookup-popup-header h3 {
+  color: #fff;
+  margin: 0;
+}
+
+.lookup-word {
+  font-size: 32px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.lookup-phonetic {
+  color: #888;
+  margin: 8px 0 16px;
+}
+
+.lookup-section {
+  margin: 16px 0;
+}
+
+.lookup-def {
+  color: #fff;
+  padding: 6px 0;
+}
+
+.lookup-no-def {
+  color: #666;
+}
+
+.lookup-error {
+  text-align: center;
+  padding: 20px;
+  color: #f44336;
+}
+
+.lookup-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* ===== 收藏弹窗样式 ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: #2a2a3e;
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 90%;
+  width: 340px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.modal-header h3 {
+  color: #fff;
+  margin: 0;
+}
+
+.modal-body .form-group {
+  margin-bottom: 16px;
+}
+
+.modal-body label {
+  display: block;
+  color: #888;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.modal-body input,
+.modal-body textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #1a1a2e;
+  color: #fff;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.modal-body textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
