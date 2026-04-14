@@ -86,6 +86,18 @@ const db = new DB();
 async function initDatabase() {
   await db.init();
   await initBuiltInWordlists();
+
+  // 初始化自定义词库
+  const customList = await db.get(STORE_WORDS, 'custom');
+  if (!customList) {
+    await db.put(STORE_WORDS, {
+      id: 'custom',
+      name: '我的词库',
+      isActive: false,
+      words: []
+    });
+  }
+
   // 初始化宠物数据
   await initPet();
 
