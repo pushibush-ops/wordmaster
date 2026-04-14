@@ -22,29 +22,6 @@ if ('serviceWorker' in navigator) {
     .catch(err => console.log('SW registration failed:', err));
 }
 
-// 初始化音频上下文（解决移动端自动播放限制）
-let audioInitialized = false;
-function initAudio() {
-  if (audioInitialized) return;
-
-  // 预加载语音
-  speechSynthesis.getVoices();
-  if (speechSynthesis.getVoices().length === 0) {
-    speechSynthesis.addEventListener('voiceschanged', () => {
-      console.log('Voices loaded:', speechSynthesis.getVoices().length);
-    });
-  }
-
-  const utterance = new SpeechSynthesisUtterance(' ');
-  utterance.volume = 0;
-  speechSynthesis.speak(utterance);
-  audioInitialized = true;
-}
-
-// 页面点击时初始化音频
-document.addEventListener('click', initAudio, { once: true });
-document.addEventListener('touchstart', initAudio, { once: true });
-
 // 路由函数
 function navigate(page) {
   currentPage = page;
@@ -254,11 +231,6 @@ async function startStudy() {
     return;
   }
 
-  // 播放一个静音音频以启用自动播放（移动端兼容）
-  const dummy = new SpeechSynthesisUtterance(' ');
-  dummy.volume = 0;
-  speechSynthesis.speak(dummy);
-
   navigate(PAGES.STUDY);
   render();
 }
@@ -291,11 +263,6 @@ async function startReview() {
   answeredCount = 0;
   initialQueueLength = studyQueue.length;
   isReviewMode = true;
-
-  // 播放一个静音音频以启用自动播放（移动端兼容）
-  const dummy = new SpeechSynthesisUtterance(' ');
-  dummy.volume = 0;
-  speechSynthesis.speak(dummy);
 
   navigate(PAGES.STUDY);
   render();
@@ -465,43 +432,11 @@ async function answerWord(isCorrect) {
   render();
 }
 
-// 发音 - 使用 ResponsiveVoice (在线更自然) 或系统语音
+// 发音 - 使用有道词典 TTS (国内访问稳定)
 function speakWord(text) {
-  // 停止当前播放
-  speechSynthesis.cancel();
-
-  // 使用 ResponsiveVoice (免费在线语音)
-  if (window.responsivevoice) {
-    responsivevoice.speak(text, "US English Male", { rate: 0.9 });
-  } else if (navigator.onLine) {
-    // 动态加载 ResponsiveVoice
-    loadResponsiveVoice();
-    playSystemTTS(text);
-  } else {
-    playSystemTTS(text);
-  }
-}
-
-function loadResponsiveVoice() {
-  if (window.responsivevoice) return;
-  const script = document.createElement('script');
-  script.src = 'https://code.responsivevoice.org/responsivevoice.js';
-  document.head.appendChild(script);
-}
-
-// 系统 TTS (离线备用)
-function playSystemTTS(text) {
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'en-US';
-  utterance.rate = 0.8;
-  utterance.pitch = 1.0;
-
-  const voices = speechSynthesis.getVoices();
-  const preferredVoice = voices.find(v => v.lang.includes('en-US') && v.name.includes('Male'))
-    || voices.find(v => v.lang.includes('en-US'));
-
-  if (preferredVoice) utterance.voice = preferredVoice;
-  speechSynthesis.speak(utterance);
+  // 使用有道词典 TTS
+  const audio = new Audio(`https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(text)}&type=2`);
+  audio.play();
 }
 
 // 词库管理页面
